@@ -9,13 +9,12 @@ S = [None, array([0, 1]), array([1, 0])]
 e = array([1, 4])
 
 gramm_schmidt_counter = 0
-steps_counter = 0
 step_success_counter = [[None], [None], [None]]
 
 
 def f(args):
     [x, y] = array(args)
-    return x**5 + y*x**8 + x**9*y - y**2
+    return x*y
 
 
 def calculate_new_coords(j):
@@ -26,17 +25,18 @@ def calculate_new_coords(j):
 
 
 def change_start_point():
-    global start_point_x, steps_counter
-    steps_counter = 0
+    global start_point_x
     value = randint(0, 256)
+    diff = (value * 0.5) + 0.1
+
     if value % 2 is 0:
-        start_point_x = array([start_point_x[0] + value / 100, start_point_x[1]])
+        start_point_x = array([start_point_x[0] + value / diff, start_point_x[1]])
     else:
-        start_point_x = array([start_point_x[0], start_point_x[1] + value / 100])
+        start_point_x = array([start_point_x[0], start_point_x[1] + value / diff])
 
 
 def step_forward(j):
-    global e, start_point_x, steps_counter
+    global e, start_point_x
 
     new_coords = calculate_new_coords(j)
     is_success = f(new_coords) < f(start_point_x)
@@ -51,7 +51,7 @@ def step_forward(j):
 
 
 def both_failure():
-    global step_success_counter, steps_counter
+    global step_success_counter
 
     is_failed = step_success_counter[1] == False and step_success_counter[2] == False
     return is_failed
@@ -65,14 +65,14 @@ def gramm_schmidt():
 
 
 def main():
-    global steps_counter, start_point_x, gramm_schmidt_counter
+    global start_point_x, gramm_schmidt_counter
 
     while True:
         for j in range(1, len(S)):
             step_forward(j)
 
         if both_failure():
-            if steps_counter is 0:
+            if not step_success_counter[1]:
                 change_start_point()
                 continue
 
@@ -80,7 +80,7 @@ def main():
                 print('Sukces')
                 break
             else:
-                print('running gramm-schmidt', steps_counter)
+                print('running gramm-schmidt')
                 gramm_schmidt()
                 continue
 
@@ -88,8 +88,6 @@ def main():
             print(step_success_counter)
             print('Punkt startowy zostal zmieniony. Brak minimum')
             break
-
-        steps_counter += 1
 
 
 if __name__ == '__main__':
