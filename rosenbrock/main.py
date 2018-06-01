@@ -14,7 +14,10 @@ step_success_counter = [[None], [None], [None]]
 
 def f(args):
     [x, y] = array(args)
-    return x**5 + y*x**8 + x**9*y - y**2
+    x = float(x)
+    y = float(y)
+    print(x,y)
+    return x**5 + y*x**2
 
 
 def calculate_new_coords(j):
