@@ -1,6 +1,11 @@
 from numpy import multiply, add, array
 from random import randint
 
+
+## e nie moze byc wektorem, ponieważ będzie nim również d
+## a to by oznaczało że w kroku obliczania grama-schmitta
+## w kroku 1) wychodził by nam wektor q[1x1] dla R2
+## a musi być standardowo [1x2]
 start_point_x = array([0, 0])
 a = 3
 b = -0.5
