@@ -6,6 +6,8 @@ from random import randint
 ## a to by oznaczało że w kroku obliczania grama-schmitta
 ## w kroku 1) wychodził by nam wektor q[1x1] dla R2
 ## a musi być standardowo [1x2]
+
+
 start_point_x = array([0, 0])
 a = 3
 b = -0.5
@@ -15,6 +17,36 @@ e = array([1, 4])
 gramm_schmidt_counter = 0
 steps_counter = 0
 step_success_counter = [[None], [None], [None]]
+
+#
+#
+#
+#
+def gram_schmitt_orto(d, S):
+    global gramm_schmidt_counter, S, steps_counter
+    step_counter = 0
+    gram_schmidt_counter += 1
+    
+    cast_vectors = list()
+    for i in range(min(len(d), len(S))):
+        print()
+        qn = np.array([0,0])
+        for j in range(i, len(S),1):
+            qn += (d[j]+S[j])
+        
+        cast_vectors.append(qn)
+    
+    print(cast_vectors)
+
+    new_base = list()
+    new_base.append(cast_vectors[0]/)
+
+    for i in range(len(1,cast_vectors)):
+        vn = cast_vectors[i] - S[i]*((cast_vectors[i]*S[i].T)/np.sqrt(np.dot(S[i], S[i].T)))
+        new_base.append(vn/np.sqrt(np.dot(vn, vn.T)))
+
+    return new_base
+
 
 
 def f(args):
