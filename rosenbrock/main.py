@@ -93,9 +93,14 @@ class Rosenbrock():
                 for j in directions:
                     self.step_forward(j)
 
-                if self.gramm_schmidt_counter is not 0:
-                    print('Punkt startowy zostal zmieniony. Brak minimum')
-                    exit(0)
+            if self.gramm_schmidt_counter is not 0:
+                print('Punkt startowy zostal zmieniony. Brak minimum')
+                exit(0)
+
+            # if self.steps_counter == 0:
+            #     print('Zmiana punktu startowego')
+            #     self.change_start_point()
+            #     continue
 
             print(self.x0, self.prev_progress)
             print(self.x0 - self.prev_progress)
