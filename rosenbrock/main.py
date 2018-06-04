@@ -1,8 +1,6 @@
 from numpy import multiply, add, array, sqrt, dot, linalg
 from random import randint
 
-from rosenbrock.gramm_schmidt import gs
-
 
 class Rosenbrock():
     def __init__(self, x0, f):
@@ -27,19 +25,7 @@ class Rosenbrock():
 
         self.gramm_schmidt_counter += 1
 
-        q1 = add(multiply(d[0], S[0]), multiply(d[1], S[1]))
-        q2 = multiply(d[1], S[1])
-
-        v1 = q1
-        S1 = v1 / linalg.norm(v1)
-
-        v2 = q2 - dot(dot(q2, v1) / dot(v1, v1), S1)
-        S2 = v2 / linalg.norm(v2)
-
-        print(v1, v2, S1, S2)
-
-        self.matrix_s = [array(S1), array(S2)]
-
+        self.matrix_s = [array(d / linalg.norm(d)), self.matrix_s[0] - self.matrix_s[1]]
         # for i in range(min(len(d), len(S) + 1)):
         #     print()
         #     qn = array([0, 0])
@@ -63,7 +49,7 @@ class Rosenbrock():
         return add(self.x0, multiply(self.e_step[index], self.matrix_s[index]))
 
     def change_start_point(self):
-        self.steps_counter = 0
+        # self.steps_counter = 0
 
         value = randint(-2, 2)
         diff = (value * 0.5) + 0.1
@@ -91,45 +77,41 @@ class Rosenbrock():
 
     def execute(self):
         while True:
-            directions = range(1, len(self.matrix_s) + 1)
-            for j in directions:
-                self.step_forward(j)
-
-            if self.both_failure():
-                self.failure_counter = [0, 0]
-                self.success_counter = [0, 0]
-
-                self.progress_d = self.x0 - self.prev_progress
-                self.prev_progress = self.x0
-
-                if self.steps_counter == 0:
-                    print('Zmiana poczatkowego punktu', self.x0)
-                    self.change_start_point()
-                    continue
-
-                if self.gramm_schmidt_counter is not 5:
+            if self.gramm_schmidt_counter is not 5:
+                if self.steps_counter is not 0:
                     print('Obrot wspolrzednych')
                     self.gram_schmitt_orto()
                     continue
-                else:
-                    print('Sukces w punkcie: ', self.x0)
-                    break
-
-            if self.gramm_schmidt_counter is not 0:
-                print('Punkt startowy zostal zmieniony. Brak minimum')
+            else:
+                print('Sukces w punkcie: ', self.x0)
                 break
+
+            while not self.both_failure():
+                self.success_counter = [0, 0]
+                self.failure_counter = [0, 0]
+                directions = range(1, len(self.matrix_s) + 1)
+                for j in directions:
+                    self.step_forward(j)
+
+                if self.gramm_schmidt_counter is not 0:
+                    print('Punkt startowy zostal zmieniony. Brak minimum')
+                    exit(0)
+
+            print(self.x0, self.prev_progress)
+            print(self.x0 - self.prev_progress)
+            self.progress_d = self.x0 - self.prev_progress
+            self.prev_progress = self.x0
 
             self.steps_counter += 1
 
 
 def f(args):
     [x, y] = array(args)
-
     return (1-x)**2 + 100*((y-x**2)**2)
 
 
 def main():
-    Rosenbrock([7, 9], f).execute()
+    Rosenbrock([2, 30], f).execute()
 
 
 if __name__ == '__main__':
