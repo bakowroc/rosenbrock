@@ -1,132 +1,135 @@
-from numpy import multiply, add, array
+from numpy import multiply, add, array, sqrt, dot, linalg
 from random import randint
 
+from rosenbrock.gramm_schmidt import gs
 
 
-start_point_x = array([0, 0])
-a = 3
-b = -0.5
-S = [None, array([0, 1]), array([1, 0])]
-e = array([1, 4])
+class Rosenbrock():
+    def __init__(self, x0, f):
+        self.alpha = 3
+        self.beta = - 0.5
+        self.x0 = array(x0)
+        self.matrix_s = [array([1, 0]), array([0, 1])]
+        self.e_step = array([1, 1])
+        self.f = f
 
-gramm_schmidt_counter = 0
-steps_counter = 0
-step_success_counter = [[None], [None], [None]]
+        self.gramm_schmidt_counter = 0
+        self.steps_counter = 0
+        self.success_counter = [0, 0]
+        self.failure_counter = [0, 0]
+        self.progress_d = [1, 1]
+        self.prev_progress = self.x0
 
-#
-#
-#
-#
-def gram_schmitt_orto(d, S):
-    global gramm_schmidt_counter, S, steps_counter
-    step_counter = 0
-    gram_schmidt_counter += 1
-    
-    cast_vectors = list()
-    for i in range(min(len(d), len(S))):
-        print()
-        qn = np.array([0,0])
-        for j in range(i, len(S),1):
-            qn += (d[j]+S[j])
-        
-        cast_vectors.append(qn)
-    
-    print(cast_vectors)
+    def gram_schmitt_orto(self):
+        d = self.progress_d
+        S = self.matrix_s
+        # cast_vectors = list()
 
-    new_base = list()
-    new_base.append(cast_vectors[0]/)
+        self.gramm_schmidt_counter += 1
 
-    for i in range(len(1,cast_vectors)):
-        vn = cast_vectors[i] - S[i]*((cast_vectors[i]*S[i].T)/np.sqrt(np.dot(S[i], S[i].T)))
-        new_base.append(vn/np.sqrt(np.dot(vn, vn.T)))
+        q1 = add(multiply(d[0], S[0]), multiply(d[1], S[1]))
+        q2 = multiply(d[1], S[1])
 
-    return new_base
+        v1 = q1
+        S1 = v1 / linalg.norm(v1)
 
+        v2 = q2 - dot(dot(q2, v1) / dot(v1, v1), S1)
+        S2 = v2 / linalg.norm(v2)
+
+        print(v1, v2, S1, S2)
+
+        self.matrix_s = [array(S1), array(S2)]
+
+        # for i in range(min(len(d), len(S) + 1)):
+        #     print()
+        #     qn = array([0, 0])
+        #     for j in range(i, len(S) + 1, 1):
+        #         qn += (d[j]+S[j])
+        #
+        #     cast_vectors.append(qn)
+        #
+        # new_base = list()
+        # new_base.append(cast_vectors[0])
+        #
+        # for i in range(1, len(cast_vectors)):
+        #     vn = cast_vectors[i] - S[i]*((cast_vectors[i]*S[i].T)/sqrt(dot(S[i], S[i].T)))
+        #     new_base.append(vn/sqrt(dot(vn, vn.T)))
+        #
+        # self.matrix_s = new_base
+
+        print(self.matrix_s)
+
+    def calculate_new_coords(self, index):
+        return add(self.x0, multiply(self.e_step[index], self.matrix_s[index]))
+
+    def change_start_point(self):
+        self.steps_counter = 0
+
+        value = randint(-2, 2)
+        diff = (value * 0.5) + 0.1
+
+        if value % 2 is 0:
+            self.x0 = array([self.x0[0] + value / diff, self.x0[1]])
+        else:
+            self.x0 = array([self.x0[0], self.x0[1] + value / diff])
+
+    def step_forward(self, j):
+        index = j - 1
+        new_x0 = self.calculate_new_coords(index)
+
+        if self.f(new_x0) < self.f(self.x0):
+            self.x0 = new_x0
+            self.e_step[index] = self.alpha * self.e_step[index]
+            self.success_counter[index] = 1
+        else:
+            self.e_step[index] = self.beta * self.e_step[index]
+            self.failure_counter[index] = 1
+
+    def both_failure(self):
+        is_failed = sum(self.failure_counter) == 2
+        return is_failed
+
+    def execute(self):
+        while True:
+            directions = range(1, len(self.matrix_s) + 1)
+            for j in directions:
+                self.step_forward(j)
+
+            if self.both_failure():
+                self.failure_counter = [0, 0]
+                self.success_counter = [0, 0]
+
+                self.progress_d = self.x0 - self.prev_progress
+                self.prev_progress = self.x0
+
+                if self.steps_counter == 0:
+                    print('Zmiana poczatkowego punktu', self.x0)
+                    self.change_start_point()
+                    continue
+
+                if self.gramm_schmidt_counter is not 5:
+                    print('Obrot wspolrzednych')
+                    self.gram_schmitt_orto()
+                    continue
+                else:
+                    print('Sukces w punkcie: ', self.x0)
+                    break
+
+            if self.gramm_schmidt_counter is not 0:
+                print('Punkt startowy zostal zmieniony. Brak minimum')
+                break
+
+            self.steps_counter += 1
 
 
 def f(args):
     [x, y] = array(args)
-    x = float(x)
-    y = float(y)
-    print(x,y)
-    return x**5 + y*x**2
 
-
-def calculate_new_coords(j):
-    global start_point_x, e, S
-
-    coords = add(start_point_x, multiply(e, S[j]))
-    return coords
-
-
-def change_start_point():
-    global start_point_x, steps_counter
-    steps_counter = 0
-    value = randint(0, 256)
-    diff = (value * 0.5) + 0.1
-    print(diff)
-    if value % 2 is 0:
-        start_point_x = array([start_point_x[0] + value / diff, start_point_x[1]])
-    else:
-        start_point_x = array([start_point_x[0], start_point_x[1] + value / diff])
-
-
-def step_forward(j):
-    global e, start_point_x, steps_counter
-
-    new_coords = calculate_new_coords(j)
-    is_success = f(new_coords) < f(start_point_x)
-
-    if is_success:
-        start_point_x = new_coords
-        e = multiply(e, a)
-    else:
-        e = multiply(e, b)
-
-    step_success_counter[j] = is_success
-
-
-def both_failure():
-    global step_success_counter, steps_counter
-
-    is_failed = step_success_counter[1] == False and step_success_counter[2] == False
-    return is_failed
-
-
-def gramm_schmidt():
-    global gramm_schmidt_counter, S, steps_counter
-
-    steps_counter = 0
-    gramm_schmidt_counter += 1
-    S = [None, [1, 0], [0, 1]]
+    return (1-x)**2 + 100*((y-x**2)**2)
 
 
 def main():
-    global steps_counter, start_point_x, gramm_schmidt_counter
-
-    while True:
-        for j in range(1, len(S)):
-            step_forward(j)
-
-        if both_failure():
-            if steps_counter is 0:
-                print('Zmiana poczatkowego punktu')
-                change_start_point()
-                continue
-
-            if gramm_schmidt_counter is 5:
-                print('Sukces w punkcie: ', start_point_x)
-                break
-            else:
-                print('Obrot wspolrzednych')
-                gramm_schmidt()
-                continue
-
-        if gramm_schmidt_counter is not 0:
-            print('Punkt startowy zostal zmieniony. Brak minimum')
-            break
-
-        steps_counter += 1
+    Rosenbrock([7, 9], f).execute()
 
 
 if __name__ == '__main__':
